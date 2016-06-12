@@ -51,8 +51,7 @@ indent:
 
 htmldocs:
 	doxygen
-	(head -10 html/main.html; cat package.html; tail --lines=+10 html/main.html) > main.html
-	mv -f main.html html
+	./fix-index.sh
 
 tuple_server: tuple_server.o tuple.o
 	$(CC) -o tuple_server tuple_server.o tuple.o $(LDFLAGS) -lpthread
