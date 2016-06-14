@@ -1,9 +1,11 @@
 CFLAGS=-fno-strict-aliasing -g -Wall -Wmissing-prototypes -Wstrict-prototypes -fPIC
 
 PREFIX		= /usr/local
-ifndef CC
 CC		= gcc
-endif
+
+arch := $(shell if grep lm /proc/cpuinfo > /dev/null; then \
+	echo x86_64; else \
+	echo x86; fi)
 
 # dotted python version (2.3, 2.4)
 PYDVER := $(shell python -c "import sys; print sys.version[:3]")
@@ -20,14 +22,14 @@ else
 #---------------------------------------- Unix
 PYBASE		:= $(shell which python | sed "s%/bin/python%%")
 CFLAGS		+= -I$(PYBASE)/include/python$(PYDVER)
-LDFLAGS		= -L$(PYBASE)/lib/python$(PYDVER)/config -lm -lpython$(PYDVER)
+LDFLAGS		= -L$(PYBASE)/lib/python$(PYDVER)/config-$(arch)-linux-gnu -lpython$(PYDVER)
 LDSHARED	= $(CC) -shared
 LDFLAGS_DEBUG	= -lefence
 #---------------------------------------- End of Unix
 endif
 
-LDFLAGS		+= -L/usr/lib -lm
-SITE_PACKAGES	= /usr/lib/python$(PYDVER)/site-packages
+LDFLAGS		+= -L/usr/lib/$(arch)-linux-gnu -lm
+SITE_PACKAGES	= /usr/lib/python$(PYDVER)/dist-packages
 
 ifeq ($(DEBUG),1)
 CFLAGS		+= -Wall -DDEBUG -g
@@ -58,6 +60,7 @@ tuple_server: tuple_server.o tuple.o
 
 tuple_client: tuple_client.o tuple.o
 fft: fft.o tuple.o
+	$(CC) -o fft fft.o tuple.o $(LDFLAGS)
 
 tuple.o: tuple.c tuple.h
 tuple_server.o: tuple_server.c tuple.h
